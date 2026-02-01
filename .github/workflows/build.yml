@@ -52,10 +52,39 @@ jobs:
           artifacts: "./*/*.zst"
           token: ${{ secrets.GITHUB_TOKEN }}
 
-  uploadToOneDrive:
+  buildNonAUR:
+    strategy:
+      matrix:
+        repos: [wlroots-0.19-git, cloud-pyprland]
+
+      fail-fast: false
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./build-nonaur-action
+        with:
+          repo-name: ${{ matrix.repos }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          path: ./*/*.pkg.tar.zst
+          name: ${{ matrix.repos }}
+          if-no-files-found: error
+
+      - uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          tag: "packages"
+          artifacts: "./*/*.zst"
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  uploadToOSS:
     runs-on: ubuntu-latest
     if: always()
-    needs: [buildAUR]
+    needs: [buildAUR, buildNonAUR]
 
     steps:
       - uses: actions/checkout@v4
@@ -68,8 +97,11 @@ jobs:
 
       - uses: ./create-db-and-upload-action
         with:
-          RCLONE_CONFIG_CONTENT: ${{ secrets.RCLONE_CONFIG }}
-          RCLONE_CONFIG_NAME: onedrive
+          S3_ENDPOINT_URL: "https://s3.cn-north-1.qiniucs.com"
+          S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
+          S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+          S3_REGION: "cn-north-1"
           dest_path: /archrepo
           repo_name: vifly
           gpg-privatekey: ${{ secrets.gpg_private_key }}
