@@ -57,4 +57,3 @@ fi
 echo "The pkgdir is $pkgdir"
 echo "The pkgname is $pkgname"
 cd "$pkgdir"
-python3 ../build-aur-action/encode_name.py

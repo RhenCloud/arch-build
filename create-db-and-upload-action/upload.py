@@ -110,17 +110,14 @@ def multipart_upload_file(s3_client, file_path, bucket, key):
 def upload_to_s3():
     """上传所有文件到对象存储"""
     # 初始化 S3 客户端
-    s3_config = {
-        "aws_access_key_id": S3_ACCESS_KEY,
-        "aws_secret_access_key": S3_SECRET_KEY,
-        "region_name": S3_REGION,
-        "config": boto3.session.Config(signature_version="s3v4"),
-    }
-
-    if S3_ENDPOINT:
-        s3_config["endpoint_url"] = S3_ENDPOINT
-
-    s3_client = boto3.client("s3", **s3_config)
+    s3_client = boto3.client(
+        "s3",
+        region_name=S3_REGION,
+        endpoint_url=S3_ENDPOINT,
+        aws_access_key_id=S3_ACCESS_KEY,
+        aws_secret_access_key=S3_SECRET_KEY,
+        config=boto3.session.Config(signature_version="s3v4"),
+    )
 
     # 遍历当前目录下的所有文件
     current_dir = Path("./")

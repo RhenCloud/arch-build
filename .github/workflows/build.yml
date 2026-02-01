@@ -9,8 +9,7 @@ jobs:
   buildAUR:
     strategy:
       matrix:
-        repos:
-          [
+        repos: [
             visual-studio-code-bin,
             mihomo-party,
             go-musicfox-bin,
@@ -19,7 +18,7 @@ jobs:
             linuxqq,
             wechat,
             wechat-bin,
-            bun-bin,
+            # bun-bin,
           ]
         # include:
         #   - repos: git-cola
@@ -56,7 +55,7 @@ jobs:
 
       - name: Check for package files
         run: |
-          if [ -f ${{ matrix.repos }}/*.pkg.tar.zst ]; then
+          if ls ${{ matrix.repos }}/*.pkg.tar.zst 1> /dev/null 2>&1; then
             echo "Package files found"
             ls -lh ${{ matrix.repos }}/*.pkg.tar.zst
           else
