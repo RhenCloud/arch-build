@@ -34,7 +34,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./build-aur-action
+      # 缓存已构建的包
+      - name: Cache built packages
+        id: cache-pkg
+        uses: actions/cache@v4
+        with:
+          path: ./*/*.pkg.tar.zst
+          key: aur-${{ matrix.repos }}-${{ hashFiles('**/*.SRCINFO', '**/PKGBUILD') }}-${{ github.run_number }}
+          restore-keys: |
+            aur-${{ matrix.repos }}-${{ hashFiles('**/*.SRCINFO', '**/PKGBUILD') }}-
+            aur-${{ matrix.repos }}-
+
+      - name: Build AUR package
+        if: steps.cache-pkg.outputs.cache-hit != 'true'
+        uses: ./build-aur-action
         with:
           repo-name: ${{ matrix.repos }}
           # preinstallPkgs: ${{ matrix.preinstall-pkgs }}
@@ -64,7 +77,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./build-nonaur-action
+      # 缓存已构建的 nonaur 包
+      - name: Cache built packages
+        id: cache-pkg
+        uses: actions/cache@v4
+        with:
+          path: ./*/*.pkg.tar.zst
+          key: nonaur-${{ matrix.repos }}-${{ hashFiles(format('nonaur-pkgbuilds/{0}/PKGBUILD', matrix.repos)) }}-${{ github.run_number }}
+          restore-keys: |
+            nonaur-${{ matrix.repos }}-${{ hashFiles(format('nonaur-pkgbuilds/{0}/PKGBUILD', matrix.repos)) }}-
+            nonaur-${{ matrix.repos }}-
+
+      - name: Build NonAUR package
+        if: steps.cache-pkg.outputs.cache-hit != 'true'
+        uses: ./build-nonaur-action
         with:
           pkgdir: nonaur-pkgbuilds/${{ matrix.repos }}
 
