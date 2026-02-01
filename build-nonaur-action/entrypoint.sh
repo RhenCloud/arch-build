@@ -3,6 +3,20 @@ set -euo pipefail
 
 FILE="$(basename "$0")"
 
+BASEDIR="$PWD"
+echo "BASEDIR: $BASEDIR"
+cd "${INPUT_PKGDIR:-.}"
+
+# 检查是否存在缓存的包文件
+if ls *.pkg.tar.zst 1> /dev/null 2>&1; then
+	echo "Found cached package files, skipping build"
+	echo "Cached files:"
+	ls -lh *.pkg.tar.zst
+	exit 0
+fi
+
+echo "No cached package found, starting build"
+
 # Enable the multilib repository
 cat << EOM >> /etc/pacman.conf
 [multilib]
@@ -29,24 +43,10 @@ echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 # Give all users (particularly builder) full access to these files
 chmod -R a+rw .
 
-BASEDIR="$PWD"
-echo "BASEDIR: $BASEDIR"
-cd "${INPUT_PKGDIR:-.}"
-
 # Just generate .SRCINFO
 if ! [ -f .SRCINFO ]; then
 	sudo -u builder makepkg --printsrcinfo > .SRCINFO
 fi
-
-# 检查是否存在缓存的包文件
-if ls *.pkg.tar.zst 1> /dev/null 2>&1; then
-	echo "Found cached package files, skipping build"
-	echo "Cached files:"
-	ls -lh *.pkg.tar.zst
-	exit 0
-fi
-
-echo "No cached package found, starting build"
 if [ -n "${INPUT_AURDEPS:-}" ]; then
 	echo "Installing AUR dependencies..."
 	# Extract dependencies from .SRCINFO (depends or depends_x86_64) and install

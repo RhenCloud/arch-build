@@ -15,7 +15,7 @@ S3_SECRET_KEY = os.environ.get("S3_SECRET_ACCESS_KEY", "")
 S3_BUCKET = os.environ.get("S3_BUCKET_NAME", "")
 S3_REGION = os.environ.get("S3_REGION", "us-east-1")
 
-if ROOT_PATH.startswith("/"):
+if ROOT_PATH.startswith("/") and ROOT_PATH != "/":
     ROOT_PATH = ROOT_PATH[1:]
 
 # 分片上传配置
