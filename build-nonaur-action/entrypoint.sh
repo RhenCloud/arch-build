@@ -38,7 +38,15 @@ if ! [ -f .SRCINFO ]; then
 	sudo -u builder makepkg --printsrcinfo > .SRCINFO
 fi
 
-# Optionally install dependencies from AUR
+# 检查是否存在缓存的包文件
+if ls *.pkg.tar.zst 1> /dev/null 2>&1; then
+	echo "Found cached package files, skipping build"
+	echo "Cached files:"
+	ls -lh *.pkg.tar.zst
+	exit 0
+fi
+
+echo "No cached package found, starting build"
 if [ -n "${INPUT_AURDEPS:-}" ]; then
 	echo "Installing AUR dependencies..."
 	# Extract dependencies from .SRCINFO (depends or depends_x86_64) and install

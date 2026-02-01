@@ -11,7 +11,7 @@ jobs:
       matrix:
         repos: [
             visual-studio-code-bin,
-            mihomo-party,
+            mihomo-party-bin,
             go-musicfox-bin,
             google-chrome,
             pyprland-git,
