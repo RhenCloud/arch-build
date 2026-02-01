@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 import boto3
+import boto3.session
 
 REPO_NAME = os.environ["repo_name"]
 ROOT_PATH = os.environ["dest_path"]
@@ -24,6 +25,7 @@ def upload_to_s3():
         "aws_access_key_id": S3_ACCESS_KEY,
         "aws_secret_access_key": S3_SECRET_KEY,
         "region_name": S3_REGION,
+        "config": boto3.session.Config(signature_version="s3v4"),
     }
 
     if S3_ENDPOINT:

@@ -30,6 +30,7 @@ s3_config = {
     "aws_secret_access_key": S3_SECRET_KEY,
     "region_name": S3_REGION,
 }
+    "config": boto3.session.Config(signature_version="s3v4"),
 
 if S3_ENDPOINT:
     s3_config["endpoint_url"] = S3_ENDPOINT
