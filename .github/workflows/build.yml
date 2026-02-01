@@ -39,7 +39,9 @@ jobs:
         id: cache-pkg
         uses: actions/cache@v4
         with:
-          path: ./*/*.pkg.tar.zst
+          path: |
+            ${{ matrix.repos }}/*.pkg.tar.zst
+            ${{ matrix.repos }}/*.pkg.tar.zst.sig
           key: aur-${{ matrix.repos }}-${{ hashFiles('**/*.SRCINFO', '**/PKGBUILD') }}-${{ github.run_number }}
           restore-keys: |
             aur-${{ matrix.repos }}-${{ hashFiles('**/*.SRCINFO', '**/PKGBUILD') }}-
@@ -51,6 +53,16 @@ jobs:
         with:
           repo-name: ${{ matrix.repos }}
           # preinstallPkgs: ${{ matrix.preinstall-pkgs }}
+
+      - name: Check for package files
+        run: |
+          if [ -f ${{ matrix.repos }}/*.pkg.tar.zst ]; then
+            echo "Package files found"
+            ls -lh ${{ matrix.repos }}/*.pkg.tar.zst
+          else
+            echo "No package files found"
+            exit 1
+          fi
 
       - uses: actions/upload-artifact@v4
         with:
@@ -82,7 +94,9 @@ jobs:
         id: cache-pkg
         uses: actions/cache@v4
         with:
-          path: ./*/*.pkg.tar.zst
+          path: |
+            nonaur-pkgbuilds/${{ matrix.repos }}/*.pkg.tar.zst
+            nonaur-pkgbuilds/${{ matrix.repos }}/*.pkg.tar.zst.sig
           key: nonaur-${{ matrix.repos }}-${{ hashFiles(format('nonaur-pkgbuilds/{0}/PKGBUILD', matrix.repos)) }}-${{ github.run_number }}
           restore-keys: |
             nonaur-${{ matrix.repos }}-${{ hashFiles(format('nonaur-pkgbuilds/{0}/PKGBUILD', matrix.repos)) }}-
@@ -93,6 +107,16 @@ jobs:
         uses: ./build-nonaur-action
         with:
           pkgdir: nonaur-pkgbuilds/${{ matrix.repos }}
+
+      - name: Check for package files
+        run: |
+          if ls nonaur-pkgbuilds/${{ matrix.repos }}/*.pkg.tar.zst 1> /dev/null 2>&1; then
+            echo "Package files found"
+            ls -lh nonaur-pkgbuilds/${{ matrix.repos }}/*.pkg.tar.zst
+          else
+            echo "No package files found"
+            exit 1
+          fi
 
       - uses: actions/upload-artifact@v4
         with:
