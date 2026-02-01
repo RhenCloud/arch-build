@@ -22,7 +22,17 @@ if [ ! -z "$INPUT_PREINSTALLPKGS" ]; then
     pacman -S --noconfirm "$INPUT_PREINSTALLPKGS"
 fi
 
-sudo --set-home -u builder yay -S --noconfirm --builddir=./ "$pkgname"
+# 检查是否存在缓存的包文件
+if ls "$pkgname"/*.pkg.tar.zst 1> /dev/null 2>&1; then
+    echo "Found cached package files, skipping build"
+    echo "Cached files:"
+    ls -lh "$pkgname"/*.pkg.tar.zst
+else
+    echo "No cached package found, starting build"
+    # 清理可能残留的构建目录，以避免 git clone 失败
+    rm -rf "$pkgname"
+    sudo --set-home -u builder yay -S --noconfirm --builddir=./ "$pkgname"
+fi
 
 # Find the actual build directory (pkgbase) created by yay.
 # Some AUR packages use a different pkgbase directory name,
