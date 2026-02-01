@@ -78,9 +78,13 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
   buildNonAUR:
+    needs: buildAUR
     strategy:
       matrix:
         repos: [wlroots-0.19-git, cloud-pyprland]
+        include:
+          - repos: cloud-pyprland
+            aurdeps: "true"
 
       fail-fast: false
 
@@ -107,6 +111,7 @@ jobs:
         uses: ./build-nonaur-action
         with:
           pkgdir: nonaur-pkgbuilds/${{ matrix.repos }}
+          aurdeps: ${{ matrix.aurdeps }}
 
       - name: Check for package files
         run: |
