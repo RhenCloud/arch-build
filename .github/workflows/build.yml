@@ -120,7 +120,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          path: ./*/*.pkg.tar.zst
+          path: nonaur-pkgbuilds/${{ matrix.repos }}/*.pkg.tar.zst
           name: ${{ matrix.repos }}
           if-no-files-found: error
 
@@ -128,7 +128,7 @@ jobs:
         with:
           allowUpdates: true
           tag: "packages"
-          artifacts: "./*/*.zst"
+          artifacts: "nonaur-pkgbuilds/${{ matrix.repos }}/*.zst"
           token: ${{ secrets.GITHUB_TOKEN }}
 
   uploadToOSS:
