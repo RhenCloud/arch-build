@@ -18,6 +18,8 @@ jobs:
             linuxqq,
             wechat,
             wechat-bin,
+            maple-mono-nf-cn-unhinted,
+            noctalia-shell,
             # bun-bin,
           ]
         # include:
