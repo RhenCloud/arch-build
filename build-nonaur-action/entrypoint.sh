@@ -38,39 +38,17 @@ if ! [ -f .SRCINFO ]; then
 	sudo -u builder makepkg --printsrcinfo > .SRCINFO
 fi
 
-function recursive_build () {
-	for d in *; do
-		if [ -d "$d" ]; then
-			(cd -- "$d" && recursive_build)
-		fi
-	done
-	
-	sudo -u builder makepkg --printsrcinfo > .SRCINFO
-	mapfile -t OTHERPKGDEPS < \
-		<(sed -n -e 's/^[[:space:]]*\(make\)\?depends\(_x86_64\)\? = \([[:alnum:][:punct:]]*\)[[:space:]]*$/\3/p' .SRCINFO)
-	sudo -H -u builder yay --sync --noconfirm --needed --builddir="$BASEDIR" "${OTHERPKGDEPS[@]}"
-	
-	sudo -H -u builder makepkg --install --noconfirm
-	[ -d "$BASEDIR/local/" ] || mkdir "$BASEDIR/local/"
-	cp ./*.pkg.tar.zst "$BASEDIR/local/"
-}
-
 # Optionally install dependencies from AUR
 if [ -n "${INPUT_AURDEPS:-}" ]; then
+	echo "Installing AUR dependencies..."
 	# Extract dependencies from .SRCINFO (depends or depends_x86_64) and install
 	mapfile -t PKGDEPS < \
 		<(sed -n -e 's/^[[:space:]]*\(make\)\?depends\(_x86_64\)\? = \([[:alnum:][:punct:]]*\)[[:space:]]*$/\3/p' .SRCINFO)
 	
-	# If package have dependencies from AUR and we want to use our PKGBUILD of these dependencies
-	CURDIR="$PWD"
-	for d in *; do
-		if [ -d "$d" ]; then
-			(cd -- "$d" && recursive_build)
-		fi
-	done
-	cd "$CURDIR"
-	
-	sudo -H -u builder yay --sync --noconfirm --needed --builddir="$BASEDIR" "${PKGDEPS[@]}"
+	# Use yay to install all dependencies from AUR
+	if [ ${#PKGDEPS[@]} -gt 0 ]; then
+		sudo -H -u builder yay -S --noconfirm --needed --builddir="$BASEDIR" "${PKGDEPS[@]}"
+	fi
 fi
 
 # Build packages
