@@ -1,0 +1,22 @@
+name: 'Generate Arch Repo database'
+description: 'Generate Arch Repo database'
+inputs:
+  repo_name:
+    required: true
+  gpg-privatekey:
+    description: 'Your GPG private key, used to sign repo.'
+  package_path:
+    default: './packages'
+  output_path:
+    description: 'Path to save the generated database.'
+    default: './repo'
+    
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  
+  env:
+    repo_name: ${{ inputs.repo_name }}
+    gpg_key: ${{ inputs.gpg-privatekey }}
+    package_path: ${{ inputs.package_path }}
+    output_path: ${{ inputs.output_path }}

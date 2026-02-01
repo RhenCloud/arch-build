@@ -1,0 +1,26 @@
+name: Sync Database
+description: Sync Arch Repo database from source to destination
+inputs:
+  src_repo_path:
+    required: true
+    description: 'Path to the source repo containing packages.'
+    default: './src_repo'
+  dest_repo_path:
+    required: true
+    description: 'Path to the destination repo where the database will be synced.'
+    default: './dest_repo'
+  repo_name:
+    required: true
+  output_path:
+    description: 'Path to save the new packages.'
+    default: './new_packages'
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+
+  env:
+    src_repo_path: ${{ inputs.src_repo_path }}
+    dest_repo_path: ${{ inputs.dest_repo_path }}
+    repo_name: ${{ inputs.repo_name }}
+    output_path: ${{ inputs.output_path }}

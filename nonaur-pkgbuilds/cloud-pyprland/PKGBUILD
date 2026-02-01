@@ -1,0 +1,38 @@
+# Maintainer: RhenCloud <i@rhen.cloud>
+# Contributor: RhenCloud <i@rhen.cloud>
+pkgname=cloud-pyprland
+pkgver=r15.675cf3b
+pkgrel=1
+
+pkgdesc="RhenCloud's plugins for pyprland"
+arch=(any)
+url="https://github.com/RhenCloud/cloud-pyprland"
+license=('MIT')
+groups=()
+depends=('python' 'pyprland-git')
+makedepends=('git' 'python-build' 'python-installer' 'python-poetry' 'gcc')
+provides=("${pkgname%-git}")
+conflicts=("${pkgname%-git}")
+replaces=()
+backup=()
+options=()
+install=
+source=(git+"https://github.com/RhenCloud/cloud-pyprland#branch=main")
+noextract=()
+md5sums=('SKIP')
+
+pkgver() {
+    cd "$srcdir/${pkgname%-git}"
+    printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
+build() {
+    cd "$srcdir/${pkgname%-git}"
+    python -m build --wheel --no-isolation
+}
+
+package() {
+    cd "$srcdir/${pkgname%-git}"
+    python -m installer --destdir="$pkgdir" dist/*.whl
+    install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

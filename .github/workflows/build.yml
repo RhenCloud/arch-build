@@ -1,114 +1,83 @@
 name: BUILD
 
 on:
-    push:
-    schedule:
-        - cron: "1 */8 * * *"
-    workflow_dispatch:
+  push:
+  schedule:
+    - cron: "1 */8 * * *"
 
 jobs:
-    buildAUR:
-        strategy:
-            matrix:
-                repos:
-                    [
-                        visual-studio-code-bin,
-                        mihomo-party,
-                        go-musicfox-bin,
-                        google-chrome,
-                        pyprland-git,
-                        linuxqq,
-                        wechat,
-                        wechat-bin,
-                        bun-bin,
-                    ]
+  buildAUR:
+    strategy:
+      matrix:
+        repos:
+          [
+            visual-studio-code-bin,
+            mihomo-party,
+            go-musicfox-bin,
+            google-chrome,
+            pyprland-git,
+            linuxqq,
+            wechat,
+            wechat-bin,
+            bun-bin,
+          ]
+        # include:
+        #   - repos: git-cola
+        #     preinstall-pkgs: "at-spi2-core"
+        #   - repos: realesrgan-ncnn-vulkan
+        #     preinstall-pkgs: "vulkan-intel"
 
-                # include:
-                #   - repos: git-cola
-                #     preinstall-pkgs: "at-spi2-core"
-                #   - repos: realesrgan-ncnn-vulkan
-                #     preinstall-pkgs: "vulkan-intel"
+      fail-fast: false
 
-            fail-fast: false
+    runs-on: ubuntu-latest
 
-        runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-        steps:
-            - uses: actions/checkout@v4
+      - uses: ./build-aur-action
+        with:
+          repo-name: ${{ matrix.repos }}
+          # preinstallPkgs: ${{ matrix.preinstall-pkgs }}
 
-            - uses: ./build-aur-action
-              with:
-                  repo-name: ${{ matrix.repos }}
-                  preinstallPkgs: ${{ matrix.preinstall-pkgs }}
+      - uses: actions/upload-artifact@v4
+        with:
+          path: ./*/*.pkg.tar.zst
+          name: ${{ matrix.repos }}
+          if-no-files-found: error
 
-            - uses: actions/upload-artifact@v4
-              with:
-                  path: ./*/*.pkg.tar.zst
-                  name: ${{ matrix.repos }}
-                  if-no-files-found: error
+      - uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          tag: "packages"
+          artifacts: "./*/*.zst"
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-            - uses: ncipollo/release-action@v1
-              with:
-                  allowUpdates: true
-                  tag: "packages"
-                  artifacts: "./*/*.zst"
-                  token: ${{ secrets.GITHUB_TOKEN }}
+  uploadToOneDrive:
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [buildAUR]
 
-    buildNonAUR:
-        strategy:
-            matrix:
-                non-aur-repos: [wlroots-0.19-git]
-            fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
 
-        runs-on: ubuntu-latest
+      - uses: actions/download-artifact@v4
+        id: download
 
-        steps:
-            - uses: actions/checkout@v4
+      - name: Display structure of downloaded files
+        run: ls -R ${{ steps.download.outputs.download-path }}
 
-            - uses: ./build-nonaur-action
-              with:
-                  pkgdir: ./nonaur-pkgbuilds/${{ matrix.non-aur-repos }}
-                  aurDeps: true
+      - uses: ./create-db-and-upload-action
+        with:
+          RCLONE_CONFIG_CONTENT: ${{ secrets.RCLONE_CONFIG }}
+          RCLONE_CONFIG_NAME: onedrive
+          dest_path: /archrepo
+          repo_name: vifly
+          gpg-privatekey: ${{ secrets.gpg_private_key }}
+          local_path: ${{ steps.download.outputs.download-path }}
 
-            - uses: actions/upload-artifact@v4
-              with:
-                  path: ./nonaur-pkgbuilds/${{ matrix.non-aur-repos }}/*.pkg.tar.zst
-                  name: ${{ matrix.non-aur-repos }}
-                  if-no-files-found: error
-
-            - uses: ncipollo/release-action@v1
-              with:
-                  allowUpdates: true
-                  tag: "packages"
-                  artifacts: "./nonaur-pkgbuilds/${{ matrix.non-aur-repos }}/*.zst"
-                  token: ${{ secrets.GITHUB_TOKEN }}
-
-    uploadToOneDrive:
-        runs-on: ubuntu-latest
-        if: always()
-        needs: [buildAUR, buildNonAUR]
-
-        steps:
-            - uses: actions/checkout@v4
-
-            - uses: actions/download-artifact@v4
-              id: download
-
-            - name: Display structure of downloaded files
-              run: ls -R ${{ steps.download.outputs.download-path }}
-
-            - uses: ./create-db-and-upload-action
-              with:
-                  RCLONE_CONFIG_CONTENT: ${{ secrets.RCLONE_CONFIG }}
-                  RCLONE_CONFIG_NAME: onedrive
-                  dest_path: /archrepo
-                  repo_name: bkctwy
-                  gpg-privatekey: ${{ secrets.gpg_private_key }}
-                  local_path: ${{ steps.download.outputs.download-path }}
-
-            - uses: ncipollo/release-action@v1
-              with:
-                  allowUpdates: true
-                  tag: "packages"
-                  artifacts: "./upload_packages/*.sig,./upload_packages/*.files,./upload_packages/*.db,./upload_packages/*.tar.gz"
-                  token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          tag: "packages"
+          artifacts: "./upload_packages/*.sig,./upload_packages/*.files,./upload_packages/*.db,./upload_packages/*.tar.gz"
+          token: ${{ secrets.GITHUB_TOKEN }}

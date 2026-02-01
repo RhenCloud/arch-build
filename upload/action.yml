@@ -1,8 +1,8 @@
 name: "Generate Arch Repo database and upload"
-description: "Create Arch Repo database from packages and upload to object storage (S3 compatible)"
+description: "Upload generated Arch Repo database to object storage (S3 compatible)"
 inputs:
   S3_ENDPOINT_URL:
-    description: "S3 endpoint URL (optional, for S3-compatible services like MinIO, R2, etc.)"
+    description: "S3 endpoint URL (optional, for S3-compatible services)"
     required: false
   S3_ACCESS_KEY_ID:
     description: "S3 access key ID"
@@ -23,9 +23,6 @@ inputs:
   repo_name:
     description: "Repository name"
     required: true
-  gpg-privatekey:
-    description: "Your GPG private key, used to sign repo."
-    required: false
   local_path:
     description: "Local path containing packages"
     default: "./"
@@ -41,5 +38,4 @@ runs:
     S3_REGION: ${{ inputs.S3_REGION }}
     dest_path: ${{ inputs.dest_path }}
     repo_name: ${{ inputs.repo_name }}
-    gpg_key: ${{ inputs.gpg-privatekey }}
     local_path: ${{ inputs.local_path }}
