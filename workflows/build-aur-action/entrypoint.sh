@@ -38,7 +38,7 @@ sudo --set-home -u builder yay -S --noconfirm --builddir=./ "$pkgname"
 
 # Find the actual build directory (pkgbase) created by yay.
 # Some AUR packages use a different pkgbase directory name,
-# e.g. otf-space-grotesk has a pkgbase 38c3-styles, 
+# e.g. otf-space-grotesk has a pkgbase 38c3-styles,
 # when using yay -S otf-space-grotesk, it's built under folder 38c3-styles.
 function get_pkgbase(){
   local pkg="$1"
@@ -56,6 +56,19 @@ if [[ -d "$pkgname" ]];
     pkgdir="$(get_pkgbase "$pkgname")"
 fi
 
+
+
 echo "The pkgdir is $pkgdir"
 echo "The pkgname is $pkgname"
 cd "$pkgdir"
+
+# Rename files to remove invalid characters (colons, etc.)
+echo "Renaming files to remove invalid characters..."
+for file in *.pkg.tar.zst*; do
+    [ -e "$file" ] || continue
+    newfile="${file//:/_}"
+    if [ "$file" != "$newfile" ]; then
+        mv "$file" "$newfile"
+        echo "Renamed: $file -> $newfile"
+    fi
+done

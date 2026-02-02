@@ -136,19 +136,6 @@ jobs:
             exit 1
           fi
 
-      - name: Rename files to remove invalid characters
-        run: |
-          cd workflows/nonaur-pkgbuilds/${{ matrix.repos }}
-          for file in *.pkg.tar.zst*; do
-            [ -e "$file" ] || continue
-            newfile="${file//:/_}"
-            if [ "$file" != "$newfile" ]; then
-              sudo mv "$file" "$newfile"
-              echo "Renamed: $file -> $newfile"bu
-            fi
-          done
-          cd ../..
-
       - uses: actions/upload-artifact@v4
         with:
           path: nonaur-pkgbuilds/${{ matrix.repos }}/*.pkg.tar.zst
