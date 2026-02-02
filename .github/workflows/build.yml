@@ -16,7 +16,6 @@ jobs:
             go-musicfox-bin,
             google-chrome,
             pyprland-git,
-            linuxqq,
             wechat,
             wechat-bin,
             maple-mono-nf-cn-unhinted,
@@ -34,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       # 缓存已构建的包
       # - name: Cache built packages
@@ -51,7 +50,7 @@ jobs:
 
       - name: Build AUR package
         # if: steps.cache-pkg.outputs.cache-hit != 'true'
-        uses: ./build-aur-action
+        uses: ./workflows/build-aur-action
         with:
           repo-name: ${{ matrix.repos }}
           # preinstallPkgs: ${{ matrix.preinstall-pkgs }}
@@ -105,7 +104,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       # 缓存已构建的 nonaur 包
       # - name: Cache built packages
@@ -122,7 +121,7 @@ jobs:
 
       - name: Build NonAUR package
         # if: steps.cache-pkg.outputs.cache-hit != 'true'
-        uses: ./build-nonaur-action
+        uses: ./workflows/build-nonaur-action
         with:
           pkgdir: nonaur-pkgbuilds/${{ matrix.repos }}
           aurDeps: ${{ matrix.aurDeps }}
@@ -169,7 +168,7 @@ jobs:
     needs: [buildAUR, buildNonAUR]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: actions/download-artifact@v4
         id: download
@@ -177,7 +176,7 @@ jobs:
       - name: Display structure of downloaded files
         run: ls -R ${{ steps.download.outputs.download-path }}
 
-      - uses: ./create-db-and-upload-action
+      - uses: ./workflows/create-db-and-upload-action
         with:
           S3_ENDPOINT_URL: "https://s3.cn-north-1.qiniucs.com"
           S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}

@@ -1,12 +1,8 @@
-FROM archlinux:latest
+FROM archlinux:base-latest
 
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 RUN date
 RUN pacman -Syu --noconfirm
-RUN pacman -S base-devel git python --noconfirm
-
+RUN pacman -S base-devel git python pyalpm --noconfirm && sed -i '/E_ROOT/d' /usr/bin/makepkg
 COPY entrypoint.sh /entrypoint.sh
-
-USER root
-
 ENTRYPOINT ["/entrypoint.sh"]

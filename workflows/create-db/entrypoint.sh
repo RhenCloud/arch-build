@@ -1,12 +1,15 @@
 #!/bin/bash
 set -e
 
-init_path=$PWD
+# Set default values for environment variables
+output_path="${output_path:-.output_path}"
+package_path="${package_path:-.packages}"
+repo_name="${repo_name:-repo}"
 
 echo "::group::Importing GPG key"
 if [ ! -z "$gpg_key" ]; then
     if [[ -d ${HOME}/.gnupg ]]; then
-        rm -rf ${HOME}/.gnupg
+        rm -rf "${HOME}"/.gnupg
     fi
     echo "$gpg_key" | gpg --import
 fi
