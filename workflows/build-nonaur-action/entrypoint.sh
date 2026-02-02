@@ -45,7 +45,7 @@ cd "${INPUT_PKGDIR:-.}"
 
 # Just generate .SRCINFO
 if ! [ -f .SRCINFO ]; then
-	sudo -u builder makepkg --printsrcinfo > .SRCINFO
+	sudo -u builder sh -c 'makepkg --printsrcinfo > .SRCINFO'
 fi
 
 function recursive_build () {
@@ -55,7 +55,7 @@ function recursive_build () {
 		fi
 	done
 	
-	sudo -u builder makepkg --printsrcinfo > .SRCINFO
+	sudo -u builder sh -c 'makepkg --printsrcinfo > .SRCINFO'
 	mapfile -t OTHERPKGDEPS < \
 		<(sed -n -e 's/^[[:space:]]*\(make\)\?depends\(_x86_64\)\? = \([[:alnum:][:punct:]]*\)[[:space:]]*$/\3/p' .SRCINFO)
 	sudo -H -u builder yay --sync --noconfirm --needed --builddir="$BASEDIR" "${OTHERPKGDEPS[@]}"
