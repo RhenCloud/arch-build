@@ -35,5 +35,5 @@ outputs:
   pkgfile1:
     description: "Filename of the 2nd generated package archive, etc."
 runs:
-  using: 'docker'
-  image: 'Dockerfile'
+  using: "docker"
+  image: "Dockerfile"

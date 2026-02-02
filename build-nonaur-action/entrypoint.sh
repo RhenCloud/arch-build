@@ -3,16 +3,12 @@ set -euo pipefail
 
 FILE="$(basename "$0")"
 
-BASEDIR="$PWD"
-echo "BASEDIR: $BASEDIR"
-cd "${INPUT_PKGDIR:-.}"
-
 # 检查是否存在缓存的包文件
-if ls *.pkg.tar.zst 1> /dev/null 2>&1; then
-	echo "Found cached package files, skipping build"
-	echo "Cached files:"
-	ls -lh *.pkg.tar.zst
-	exit 0
+if ls "${INPUT_PKGDIR:-.}"/*.pkg.tar.zst 1> /dev/null 2>&1; then
+    echo "Found cached package files, skipping build"
+    echo "Cached files:"
+    ls -lh "${INPUT_PKGDIR:-.}"/*.pkg.tar.zst
+    exit 0
 fi
 
 echo "No cached package found, starting build"
@@ -43,20 +39,48 @@ echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 # Give all users (particularly builder) full access to these files
 chmod -R a+rw .
 
+BASEDIR="$PWD"
+echo "BASEDIR: $BASEDIR"
+cd "${INPUT_PKGDIR:-.}"
+
 # Just generate .SRCINFO
 if ! [ -f .SRCINFO ]; then
 	sudo -u builder makepkg --printsrcinfo > .SRCINFO
 fi
+
+function recursive_build () {
+	for d in *; do
+		if [ -d "$d" ]; then
+			(cd -- "$d" && recursive_build)
+		fi
+	done
+	
+	sudo -u builder makepkg --printsrcinfo > .SRCINFO
+	mapfile -t OTHERPKGDEPS < \
+		<(sed -n -e 's/^[[:space:]]*\(make\)\?depends\(_x86_64\)\? = \([[:alnum:][:punct:]]*\)[[:space:]]*$/\3/p' .SRCINFO)
+	sudo -H -u builder yay --sync --noconfirm --needed --builddir="$BASEDIR" "${OTHERPKGDEPS[@]}"
+	
+	sudo -H -u builder makepkg --install --noconfirm
+	[ -d "$BASEDIR/local/" ] || mkdir "$BASEDIR/local/"
+	cp ./*.pkg.tar.zst "$BASEDIR/local/"
+}
+
+# Optionally install dependencies from AUR
 if [ -n "${INPUT_AURDEPS:-}" ]; then
-	echo "Installing AUR dependencies..."
 	# Extract dependencies from .SRCINFO (depends or depends_x86_64) and install
 	mapfile -t PKGDEPS < \
 		<(sed -n -e 's/^[[:space:]]*\(make\)\?depends\(_x86_64\)\? = \([[:alnum:][:punct:]]*\)[[:space:]]*$/\3/p' .SRCINFO)
 	
-	# Use yay to install all dependencies from AUR
-	if [ ${#PKGDEPS[@]} -gt 0 ]; then
-		sudo -H -u builder yay -S --noconfirm --needed --builddir="$BASEDIR" "${PKGDEPS[@]}"
-	fi
+	# If package have dependencies from AUR and we want to use our PKGBUILD of these dependencies
+	CURDIR="$PWD"
+	for d in *; do
+		if [ -d "$d" ]; then
+			(cd -- "$d" && recursive_build)
+		fi
+	done
+	cd "$CURDIR"
+	
+	sudo -H -u builder yay --sync --noconfirm --needed --builddir="$BASEDIR" "${PKGDEPS[@]}"
 fi
 
 # Build packages

@@ -85,7 +85,7 @@ jobs:
         repos: [wlroots-0.19-git, cloud-pyprland]
         include:
           - repos: cloud-pyprland
-            aurdeps: "true"
+            aurDeps: "true"
 
       fail-fast: false
 
@@ -112,7 +112,7 @@ jobs:
         uses: ./build-nonaur-action
         with:
           pkgdir: nonaur-pkgbuilds/${{ matrix.repos }}
-          aurdeps: ${{ matrix.aurdeps }}
+          aurDeps: ${{ matrix.aurDeps }}
 
       - name: Check for package files
         run: |
