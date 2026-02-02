@@ -41,7 +41,7 @@ chmod -R a+rw .
 
 BASEDIR="$PWD"
 echo "BASEDIR: $BASEDIR"
-cd "${INPUT_PKGDIR:-.}"
+cd workflows/"${INPUT_PKGDIR:-.}"
 
 # Just generate .SRCINFO
 if ! [ -f .SRCINFO ]; then
