@@ -138,7 +138,7 @@ jobs:
 
       - name: Rename files to remove invalid characters
         run: |
-          cd nonaur-pkgbuilds/${{ matrix.repos }}
+          cd workflows/nonaur-pkgbuilds/${{ matrix.repos }}
           for file in *.pkg.tar.zst*; do
             [ -e "$file" ] || continue
             newfile="${file//:/_}"

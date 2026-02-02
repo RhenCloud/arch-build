@@ -23,7 +23,7 @@ echo "::endgroup::"
 
 echo "::group::Removing old packages"
 
-python3 "$init_path"/create-db-and-upload-action/sync.py 
+python3 "$init_path"/workflows/create-db-and-upload-action/sync.py
 
 echo "::endgroup::"
 
@@ -44,5 +44,5 @@ fi
 echo "::endgroup::"
 
 echo "::group::Uploading to object storage"
-python3 "$init_path"/create-db-and-upload-action/upload.py 
+python3 "$init_path"/workflows/create-db-and-upload-action/upload.py 
 echo "::endgroup::"
