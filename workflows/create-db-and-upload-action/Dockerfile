@@ -1,4 +1,4 @@
-FROM archlinux:base-latest
+FROM archlinux:latest
 
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 RUN date
@@ -6,4 +6,4 @@ RUN pacman -Syu --noconfirm
 RUN pacman -S base-devel git python python-pip pyalpm --noconfirm && sed -i '/E_ROOT/d' /usr/bin/makepkg
 RUN pip install boto3 --break-system-packages
 COPY entrypoint.sh /entrypoint.sh
-ENTRYPOINT ["/entrypoint.sh"] 
+ENTRYPOINT ["/entrypoint.sh"]
