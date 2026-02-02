@@ -128,9 +128,9 @@ jobs:
 
       - name: Check for package files
         run: |
-          if ls nonaur-pkgbuilds/${{ matrix.repos }}/*.pkg.tar.zst 1> /dev/null 2>&1; then
+          if ls workflows/nonaur-pkgbuilds/${{ matrix.repos }}/*.pkg.tar.zst 1> /dev/null 2>&1; then
             echo "Package files found"
-            ls -lh nonaur-pkgbuilds/${{ matrix.repos }}/*.pkg.tar.zst
+            ls -lh workflows/nonaur-pkgbuilds/${{ matrix.repos }}/*.pkg.tar.zst
           else
             echo "No package files found"
             exit 1
