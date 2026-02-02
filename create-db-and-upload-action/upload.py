@@ -1,3 +1,4 @@
+import hashlib
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -21,6 +22,62 @@ if ROOT_PATH.startswith("/") and ROOT_PATH != "/":
 # 分片上传配置
 PART_SIZE = 10 * 1024 * 1024  # 5 MB 分片大小
 MAX_THREADS = 4  # 最多并发数
+
+
+def calculate_file_md5(file_path):
+    """计算文件的 MD5 哈希值"""
+    md5_hash = hashlib.md5()
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            md5_hash.update(chunk)
+    return md5_hash.hexdigest()
+
+
+def file_exists_and_matches(s3_client, bucket, key, local_file_path):
+    """检查远程文件是否存在且与本地文件相同"""
+    try:
+        # 获取远程对象的元数据
+        response = s3_client.head_object(Bucket=bucket, Key=key)
+        remote_size = response.get("ContentLength", 0)
+        remote_etag = response.get("ETag", "").strip('"')
+
+        # 获取本地文件大小
+        local_size = local_file_path.stat().st_size
+
+        # 首先比较文件大小
+        if local_size != remote_size:
+            print(
+                f"File size mismatch for {key}: local={local_size}, remote={remote_size}"
+            )
+            return False
+
+        # 对于小文件，直接计算本地 MD5 并比较
+        if local_size < PART_SIZE:
+            local_md5 = calculate_file_md5(local_file_path)
+            # ETag 可能带有引号，需要去除
+            remote_etag = remote_etag.strip('"')
+            if local_md5 == remote_etag:
+                print(f"File {key} already exists and matches (MD5: {local_md5})")
+                return True
+            else:
+                print(
+                    f"File hash mismatch for {key}: local_md5={local_md5}, remote_etag={remote_etag}"
+                )
+                return False
+        else:
+            # 对于大文件（分片上传），ETag 格式为 "hash-partcount"，无法直接比较
+            # 此时只能通过文件大小判断
+            print(
+                f"Large file {key}: comparing by size only (local={local_size}, remote={remote_size})"
+            )
+            return True
+
+    except s3_client.exceptions.NoSuchKey:
+        print(f"File {key} does not exist on remote")
+        return False
+    except Exception as e:
+        print(f"Error checking if {key} exists on remote: {str(e)}")
+        return False
 
 
 def upload_part(s3_client, bucket, key, upload_id, part_number, part_data, lock=None):
@@ -131,7 +188,7 @@ def upload_to_s3():
         print("No files to upload")
         return
 
-    print(f"Uploading {len(files_to_upload)} files to S3...")
+    print(f"Found {len(files_to_upload)} files, checking for differences...")
 
     # 使用线程池并行上传多个文件
     with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
@@ -160,6 +217,11 @@ def upload_to_s3():
 def upload_file_task(s3_client, file_path, s3_key):
     """单个文件上传任务"""
     try:
+        # 检查远程文件是否存在且与本地文件相同
+        if file_exists_and_matches(s3_client, S3_BUCKET, s3_key, file_path):
+            print(f"Skipping {file_path.name} (no changes detected)")
+            return
+
         print(f"Uploading {file_path.name} to s3://{S3_BUCKET}/{s3_key}")
         multipart_upload_file(s3_client, file_path, S3_BUCKET, s3_key)
     except Exception as e:
