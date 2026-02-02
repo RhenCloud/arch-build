@@ -66,6 +66,19 @@ jobs:
             exit 1
           fi
 
+      - name: Rename files to remove invalid characters
+        run: |
+          cd ${{ matrix.repos }}
+          for file in *.pkg.tar.zst*; do
+            [ -e "$file" ] || continue
+            newfile="${file//:/_}"
+            if [ "$file" != "$newfile" ]; then
+              mv "$file" "$newfile"
+              echo "Renamed: $file -> $newfile"
+            fi
+          done
+          cd ..
+
       - uses: actions/upload-artifact@v4
         with:
           path: ./*/*.pkg.tar.zst
@@ -123,6 +136,19 @@ jobs:
             echo "No package files found"
             exit 1
           fi
+
+      - name: Rename files to remove invalid characters
+        run: |
+          cd nonaur-pkgbuilds/${{ matrix.repos }}
+          for file in *.pkg.tar.zst*; do
+            [ -e "$file" ] || continue
+            newfile="${file//:/_}"
+            if [ "$file" != "$newfile" ]; then
+              mv "$file" "$newfile"
+              echo "Renamed: $file -> $newfile"
+            fi
+          done
+          cd ../..
 
       - uses: actions/upload-artifact@v4
         with:
