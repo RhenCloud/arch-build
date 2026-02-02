@@ -143,8 +143,8 @@ jobs:
             [ -e "$file" ] || continue
             newfile="${file//:/_}"
             if [ "$file" != "$newfile" ]; then
-              mv "$file" "$newfile"
-              echo "Renamed: $file -> $newfile"
+              sudo mv "$file" "$newfile"
+              echo "Renamed: $file -> $newfile"bu
             fi
           done
           cd ../..
