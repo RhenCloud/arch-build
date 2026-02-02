@@ -13,7 +13,7 @@ S3_ENDPOINT = os.environ.get("S3_ENDPOINT_URL", "")
 S3_ACCESS_KEY = os.environ.get("S3_ACCESS_KEY_ID", "")
 S3_SECRET_KEY = os.environ.get("S3_SECRET_ACCESS_KEY", "")
 S3_BUCKET = os.environ.get("S3_BUCKET_NAME", "")
-S3_REGION = os.environ.get("S3_REGION", "us-east-1")
+S3_REGION = os.environ.get("S3_REGION", "")
 
 if ROOT_PATH.startswith("/") and ROOT_PATH != "/":
     ROOT_PATH = ROOT_PATH[1:]
